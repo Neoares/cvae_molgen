@@ -1,11 +1,15 @@
 import os
 import numpy as np
+import multiprocessing
+import time
 
 from keras.callbacks import Callback
 from keras.callbacks import ModelCheckpoint
 
 from src.model import MoleculeCVAE
-from src.utils import preprocess_generator, load
+from src.utils import preprocess, preprocess_multiprocess, preprocess_generator, load
+
+from src.constants import CHARSET
 
 BASE_PATH = ''
 
@@ -17,13 +21,10 @@ LATENT_DIM = 292
 # trained with 80% of ALL chembl molecules, validated on the other 20.
 trained_model = os.path.join(BASE_PATH, 'models/model_50k.hdf5')
 # charset_file = 'charset.json'
-charset = [" ", "(", ".", "0", "2", "4", "6", "8", "@", "B", "F", "H", "L", "N", "P", "R", "T", "V", "X", "Z", "\\",
-           "b", "d", "l", "n", "p", "r", "t", "#", "%", ")", "+", "-", "/", "1", "3", "5", "7", "9", "=", "A", "C", "G",
-           "I", "K", "M", "O", "S", "[", "]", "a", "c", "e", "g", "i", "o", "s", "u"]
 
 model = MoleculeCVAE(gpu_mode=False)
-model.create(charset, latent_rep_size=LATENT_DIM)
-# model.load(charset, trained_model, latent_rep_size=latent_dim)
+model.create(CHARSET, latent_rep_size=LATENT_DIM)
+# model.load(CHARSET, trained_model, latent_rep_size=latent_dim)
 # model.autoencoder.summary()
 
 
@@ -45,20 +46,40 @@ s2_matrix, smiles = load(
     calc_smiles=False,
     limit=2_000)
 
-validation_split = .2
-split = int(len(smiles) * (1-validation_split))
-batch_size = 64
-
-
-x_train = preprocess_generator(smiles[:split], s2_matrix, charset, batch_size=batch_size)
-x_test = preprocess_generator(smiles[split:], s2_matrix, charset, batch_size=batch_size)
-
 history = LossHistory()
-checkpoint = ModelCheckpoint(filepath=os.path.join(BASE_PATH, 'models/model_50k.hdf5'))
+checkpoint = ModelCheckpoint(filepath=os.path.join(BASE_PATH, 'models/model_20k.hdf5'))
 
-model.autoencoder.fit_generator(x_train,
-                                validation_data=x_test,
-                                steps_per_epoch=np.ceil((split+1)/batch_size),
-                                validation_steps=np.ceil((len(smiles)-split)/batch_size),
-                                epochs=200,
-                                callbacks=[history])
+
+def train():
+    t1 = time.time()
+    with multiprocessing.Pool(processes=multiprocessing.cpu_count() // 2) as p:
+        smiles = p.map(preprocess_multiprocess, smiles)
+    print("time loading with multiprocess:", time.time() - t1)
+    t1 = time.time()
+    print("converting no numpy array...")
+    smiles = np.array(smiles)
+    print("time to convert to numpy array:", time.time()-t1)
+
+    model.autoencoder.fit(
+        [smiles, s2_matrix],
+        smiles,
+        batch_size=64,
+        epochs=300,
+        validation_split=0.2,
+        callbacks=[history])
+
+
+def train_generator():
+    validation_split = .2
+    split = int(len(smiles) * (1-validation_split))
+    batch_size = 64
+
+    x_train = preprocess_generator(smiles[:split], s2_matrix, batch_size=batch_size)
+    x_test = preprocess_generator(smiles[split:], s2_matrix, batch_size=batch_size)
+
+    model.autoencoder.fit_generator(x_train,
+                                    validation_data=x_test,
+                                    steps_per_epoch=np.ceil((split+1)/batch_size),
+                                    validation_steps=np.ceil((len(smiles)-split)/batch_size),
+                                    epochs=200,
+                                    callbacks=[history])

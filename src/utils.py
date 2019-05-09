@@ -4,6 +4,7 @@ import time
 from rdkit import Chem
 
 from .model_utils import one_hot_index, one_hot_array
+from .constants import CHARSET
 
 
 def load(s2_keys_path, s2_matrix_path, key2inchi_path, sep=',', calc_smiles=False, save=True, limit=None):
@@ -29,14 +30,20 @@ def load(s2_keys_path, s2_matrix_path, key2inchi_path, sep=',', calc_smiles=Fals
     return s2_matrix[:limit], smiles[:limit].tolist()
 
 
-def preprocess(smiles_list, charset):
+def preprocess(smiles_list):
     print("Loading", len(smiles_list), "smiles.")
     cropped = [s.ljust(120) for s in smiles_list]
-    preprocessed = np.array([list(map(lambda x: one_hot_array(x, len(charset)), one_hot_index(c, charset))) for c in cropped])
+    preprocessed = np.array([list(map(lambda x: one_hot_array(x, len(CHARSET)), one_hot_index(c, CHARSET))) for c in cropped])
     return preprocessed
 
 
-def preprocess_generator(smiles_list, conditions, charset, batch_size=64, shuffle=True):
+def preprocess_multiprocess(smiles):
+    cropped = smiles.ljust(120)
+    preprocessed = list(map(lambda x: one_hot_array(x, len(CHARSET)), one_hot_index(cropped, CHARSET)))
+    return preprocessed
+
+
+def preprocess_generator(smiles_list, conditions, batch_size=64, shuffle=True):
     num_samples = len(smiles_list)
     while True:
         # Every iteration here is an epoch
@@ -52,5 +59,5 @@ def preprocess_generator(smiles_list, conditions, charset, batch_size=64, shuffl
             cropped = [s.ljust(120) for s in smiles_batch]
 
             preprocessed = np.array(
-                [list(map(lambda x: one_hot_array(x, len(charset)), one_hot_index(c, charset))) for c in cropped])
+                [list(map(lambda x: one_hot_array(x, len(CHARSET)), one_hot_index(c, CHARSET))) for c in cropped])
             yield ([preprocessed, conditions_batch], preprocessed)
