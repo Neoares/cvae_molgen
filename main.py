@@ -13,7 +13,7 @@ from argparse import ArgumentParser
 
 from src.constants import CHARSET
 
-BASE_PATH = ''
+BASE_PATH = os.path.dirname(os.path.join(os.getcwd(), __file__))
 
 
 class LossHistory(Callback):
