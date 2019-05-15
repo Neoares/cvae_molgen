@@ -33,7 +33,7 @@ def load(s2_keys_path, s2_matrix_path, key2inchi_path, sep=',', calc_smiles=Fals
 def preprocess(smiles_list):
     print("Loading", len(smiles_list), "smiles.")
     cropped = [s.ljust(120) for s in smiles_list]
-    preprocessed = np.array([list(map(lambda x: one_hot_array(x, len(CHARSET)), one_hot_index(c, CHARSET))) for c in cropped])
+    preprocessed = np.array([list(map(lambda x: one_hot_array(x, len(CHARSET)), one_hot_index(c, CHARSET))) for c in cropped], dtype='int8')
     return preprocessed
 
 
