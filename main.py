@@ -13,20 +13,6 @@ from src.constants import CHARSET
 
 BASE_PATH = ''
 
-# number of dimensions to represent the molecules
-# as the model was trained with this number, any operation made with the model must share the dimensions.
-LATENT_DIM = 292
-
-# trained_model 0.99 validation accuracy
-# trained with 80% of ALL chembl molecules, validated on the other 20.
-trained_model = os.path.join(BASE_PATH, 'models/model_50k.hdf5')
-# charset_file = 'charset.json'
-
-model = MoleculeCVAE(gpu_mode=False)
-model.create(CHARSET, latent_rep_size=LATENT_DIM)
-# model.load(CHARSET, trained_model, latent_rep_size=latent_dim)
-# model.autoencoder.summary()
-
 
 class LossHistory(Callback):
     def __init__(self):
@@ -39,43 +25,32 @@ class LossHistory(Callback):
         self.logs.append(logs)
 
 
-s2_matrix, smiles = load(
-    os.path.join(BASE_PATH, 'data/s2_keys_400k.npy'),
-    os.path.join(BASE_PATH, 'data/s2_matrix_400k.npy'),
-    os.path.join(BASE_PATH, 'data/key2inch_400k.csv'),
-    calc_smiles=False,
-    limit=2_000)
-
-history = LossHistory()
-checkpoint = ModelCheckpoint(filepath=os.path.join(BASE_PATH, 'models/model_20k.hdf5'))
-
-
-def train():
+def train(x, c, callbacks=()):
     t1 = time.time()
-    with multiprocessing.Pool(processes=multiprocessing.cpu_count() // 2) as p:
-        smiles = p.map(preprocess_multiprocess, smiles)
+    with multiprocessing.Pool(processes=multiprocessing.cpu_count()) as p:
+        x = p.map(preprocess_multiprocess, x)
     print("time loading with multiprocess:", time.time() - t1)
     t1 = time.time()
     print("converting no numpy array...")
-    smiles = np.array(smiles)
+    x = np.array(x)
     print("time to convert to numpy array:", time.time()-t1)
 
     model.autoencoder.fit(
-        [smiles, s2_matrix],
-        smiles,
+        [x, c],
+        x,
         batch_size=64,
         epochs=300,
         validation_split=0.2,
-        callbacks=[history])
+        callbacks=callbacks)
 
 
-def train_generator():
+def train_generator(x, c):
     validation_split = .2
-    split = int(len(smiles) * (1-validation_split))
+    split = int(len(x) * (1-validation_split))
     batch_size = 64
 
-    x_train = preprocess_generator(smiles[:split], s2_matrix, batch_size=batch_size)
-    x_test = preprocess_generator(smiles[split:], s2_matrix, batch_size=batch_size)
+    x_train = preprocess_generator(x[:split], c, batch_size=batch_size)
+    x_test = preprocess_generator(x[split:], c, batch_size=batch_size)
 
     model.autoencoder.fit_generator(x_train,
                                     validation_data=x_test,
@@ -83,3 +58,28 @@ def train_generator():
                                     validation_steps=np.ceil((len(smiles)-split)/batch_size),
                                     epochs=200,
                                     callbacks=[history])
+
+
+if __name__ == '__main__':
+    # number of dimensions to represent the molecules
+    # as the model was trained with this number, any operation made with the model must share the dimensions.
+    LATENT_DIM = 292
+
+    trained_model = os.path.join(BASE_PATH, 'models/model_2k.hdf5')
+
+    model = MoleculeCVAE(gpu_mode=False)
+    model.create(CHARSET, latent_rep_size=LATENT_DIM)
+    # model.load(CHARSET, trained_model, latent_rep_size=LATENT_DIM)
+    # model.autoencoder.summary()
+
+    s2_matrix, smiles = load(
+        os.path.join(BASE_PATH, 'data/s2_keys_400k.npy'),
+        os.path.join(BASE_PATH, 'data/s2_matrix_400k.npy'),
+        os.path.join(BASE_PATH, 'data/key2inch_400k.csv'),
+        calc_smiles=False,
+        limit=200)
+
+    history = LossHistory()
+    checkpoint = ModelCheckpoint(filepath=os.path.join(BASE_PATH, 'models/model_2k.hdf5'))
+
+    train(smiles, s2_matrix)

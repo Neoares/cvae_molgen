@@ -29,7 +29,7 @@ class MoleculeCVAE:
         cond_trans = Permute((2, 1))(cond_rep)
         inputs = concatenate([x, cond_trans], axis=-2)
 
-        _, _, _, z = self._buildEncoder(inputs, latent_rep_size, max_length)
+        _, z = self._buildEncoder(inputs, latent_rep_size, max_length)
         self.encoder = Model([x, cond], z)
 
         z_cond = concatenate([z, cond], axis=1)
@@ -46,7 +46,7 @@ class MoleculeCVAE:
         )
 
         # x1 = Input(shape=(max_length, charset_length))
-        vae_loss, xent_loss, kl_loss, z1 = self._buildEncoder(inputs, latent_rep_size, max_length)
+        vae_loss, z1 = self._buildEncoder(inputs, latent_rep_size, max_length)
         self.autoencoder = Model(
             [x, cond],
             self._buildDecoder(
@@ -85,16 +85,6 @@ class MoleculeCVAE:
         z_mean = Dense(latent_rep_size, name='z_mean', activation='linear')(h)
         z_log_var = Dense(latent_rep_size, name='z_log_var', activation='linear')(h)
 
-        def xent_loss(x, x_decoded_mean):
-            x = K.flatten(x)
-            x_decoded_mean = K.flatten(x_decoded_mean)
-            xent_loss = max_length * objectives.binary_crossentropy(x, x_decoded_mean)
-            return xent_loss
-
-        def kl_loss(x, x_decoded_mean):
-            kl_loss = - 0.5 * K.mean(1 + z_log_var - K.square(z_mean) - K.exp(z_log_var), axis=-1)
-            return kl_loss
-
         def vae_loss(x, x_decoded_mean):
             x = K.flatten(x)
             x_decoded_mean = K.flatten(x_decoded_mean)
@@ -102,7 +92,7 @@ class MoleculeCVAE:
             kl_loss = - 0.5 * K.mean(1 + z_log_var - K.square(z_mean) - K.exp(z_log_var), axis=-1)
             return xent_loss + kl_loss
 
-        return (vae_loss, xent_loss, kl_loss,
+        return (vae_loss,
                 Lambda(sampling, output_shape=(latent_rep_size,), name='lambda')([z_mean, z_log_var]))
 
     def _buildDecoder(self, z, latent_rep_size, max_length, charset_length):
