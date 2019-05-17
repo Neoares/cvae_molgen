@@ -78,6 +78,8 @@ if __name__ == '__main__':
                         help='Whether to use generators while training or not.')
     parser.add_argument('-v', '--verbose', default=2, type=int, help='Verbose for the training part.')
     parser.add_argument('-tb', '--tensorboard', default='model', type=str, help='Name of the model in tensorboard.')
+    parser.add_argument('--loss', default='binary', type=str,
+                        help='Loss function to use. Types: [binary (default), categorical]')
 
     args = parser.parse_args()
 
@@ -87,7 +89,7 @@ if __name__ == '__main__':
 
     trained_model = os.path.join(BASE_PATH, 'models/model_400k_.995.hdf5')
 
-    model = MoleculeCVAE(gpu_mode=args.gpu)
+    model = MoleculeCVAE(loss=args.loss, gpu_mode=args.gpu)
     model.create(CHARSET, latent_rep_size=LATENT_DIM)
     # model.load(CHARSET, trained_model, latent_rep_size=LATENT_DIM)
     # model.autoencoder.summary()

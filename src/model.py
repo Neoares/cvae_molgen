@@ -9,11 +9,12 @@ BASE_PATH = '../'
 
 
 class MoleculeCVAE:
-    def __init__(self, gpu_mode=True):
+    def __init__(self, loss='binary', gpu_mode=True):
         self.autoencoder = None
         self.encoder = None
         self.decoder = None
         self.gpu_mode = gpu_mode
+        self.loss = loss
 
     def create(self,
                charset,
@@ -85,7 +86,7 @@ class MoleculeCVAE:
         z_mean = Dense(latent_rep_size, name='z_mean', activation='linear')(h)
         z_log_var = Dense(latent_rep_size, name='z_log_var', activation='linear')(h)
 
-        def vae_loss(x, x_decoded_mean):
+        def binary_loss(x, x_decoded_mean):
             x = K.flatten(x)
             x_decoded_mean = K.flatten(x_decoded_mean)
             xent_loss = max_length * objectives.binary_crossentropy(x, x_decoded_mean)
@@ -97,7 +98,9 @@ class MoleculeCVAE:
             kl_loss = - 0.5 * K.mean(1 + z_log_var - K.square(z_mean) - K.exp(z_log_var), axis=-1)
             return xent_loss + kl_loss
 
-        return (categorical_loss,
+        loss = categorical_loss if self.loss == 'categorical' else binary_loss
+
+        return (loss,
                 Lambda(sampling, output_shape=(latent_rep_size,), name='lambda')([z_mean, z_log_var]))
 
     def _buildDecoder(self, z, latent_rep_size, max_length, charset_length):
