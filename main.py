@@ -3,8 +3,7 @@ import numpy as np
 import multiprocessing
 import time
 
-from keras.callbacks import Callback
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import Callback, ModelCheckpoint, TensorBoard
 
 from src.model import MoleculeCVAE
 from src.utils import preprocess, preprocess_multiprocess, preprocess_generator, load
@@ -46,7 +45,8 @@ def train(x, c, config, callbacks=()):
         batch_size=config.batch_size,
         epochs=config.epochs,
         validation_split=0.2,
-        callbacks=callbacks)
+        callbacks=callbacks,
+        verbose=config.verbose)
 
 
 def train_generator(x, c, config, callbacks=()):
@@ -61,7 +61,8 @@ def train_generator(x, c, config, callbacks=()):
                                     steps_per_epoch=np.ceil((split+1) / config.batch_size),
                                     validation_steps=np.ceil((len(smiles) - split) / config.batch_size),
                                     epochs=config.epochs,
-                                    callbacks=callbacks)
+                                    callbacks=callbacks,
+                                    verbose=config.verbose)
 
 
 if __name__ == '__main__':
@@ -75,9 +76,10 @@ if __name__ == '__main__':
                         help='Whether to use multiple threads to process all data or not.')
     parser.add_argument('--use-generators', action='store_true',
                         help='Whether to use generators while training or not.')
+    parser.add_argument('-v', '--verbose', default=2, type=int, help='Verbose for the training part.')
+    parser.add_argument('-tb', '--tensorboard', default='model', type=str, help='Name of the model in tensorboard.')
 
     args = parser.parse_args()
-    print(args)
 
     # number of dimensions to represent the molecules
     # as the model was trained with this number, any operation made with the model must share the dimensions.
@@ -99,8 +101,9 @@ if __name__ == '__main__':
 
     history = LossHistory()
     checkpoint = ModelCheckpoint(filepath=os.path.join(BASE_PATH, 'models/model_test.hdf5'))
+    tensorboard = TensorBoard(log_dir=os.path.join(BASE_PATH, "logs/{}_{}".format(round(time.time()), args.tensorboard)))
 
     if args.use_generators:
-        train_generator(smiles, s2_matrix, args)
+        train_generator(smiles, s2_matrix, args, callbacks=[tensorboard])
     else:
-        train(smiles, s2_matrix, args)
+        train(smiles, s2_matrix, args, callbacks=[tensorboard])

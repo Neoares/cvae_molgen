@@ -92,7 +92,12 @@ class MoleculeCVAE:
             kl_loss = - 0.5 * K.mean(1 + z_log_var - K.square(z_mean) - K.exp(z_log_var), axis=-1)
             return xent_loss + kl_loss
 
-        return (vae_loss,
+        def categorical_loss(x, x_decoded_mean):
+            xent_loss = K.mean(objectives.categorical_crossentropy(x, x_decoded_mean))
+            kl_loss = - 0.5 * K.mean(1 + z_log_var - K.square(z_mean) - K.exp(z_log_var), axis=-1)
+            return xent_loss + kl_loss
+
+        return (categorical_loss,
                 Lambda(sampling, output_shape=(latent_rep_size,), name='lambda')([z_mean, z_log_var]))
 
     def _buildDecoder(self, z, latent_rep_size, max_length, charset_length):
