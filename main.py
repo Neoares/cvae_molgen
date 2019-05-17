@@ -77,7 +77,7 @@ if __name__ == '__main__':
     parser.add_argument('--use-generators', action='store_true',
                         help='Whether to use generators while training or not.')
     parser.add_argument('-v', '--verbose', default=2, type=int, help='Verbose for the training part.')
-    parser.add_argument('-tb', '--tensorboard', default='model', type=str, help='Name of the model in tensorboard.')
+    parser.add_argument('-n', '--name', default='model', type=str, help='Name of the model.')
     parser.add_argument('--loss', default='binary', type=str,
                         help='Loss function to use. Types: [binary (default), categorical]')
 
@@ -102,10 +102,12 @@ if __name__ == '__main__':
         limit=args.size)
 
     history = LossHistory()
-    checkpoint = ModelCheckpoint(filepath=os.path.join(BASE_PATH, 'models/model_test.hdf5'))
-    tensorboard = TensorBoard(log_dir=os.path.join(BASE_PATH, "logs/{}_{}".format(round(time.time()), args.tensorboard)))
+    checkpoint = ModelCheckpoint(
+        filepath=os.path.join(BASE_PATH, 'models/{}_{}.hdf5'.format(round(time.time()), args.name)))
+    tensorboard = TensorBoard(
+        log_dir=os.path.join(BASE_PATH, "logs/{}_{}".format(round(time.time()), args.name)))
 
     if args.use_generators:
-        train_generator(smiles, s2_matrix, args, callbacks=[tensorboard])
+        train_generator(smiles, s2_matrix, args, callbacks=[checkpoint, tensorboard])
     else:
-        train(smiles, s2_matrix, args, callbacks=[tensorboard])
+        train(smiles, s2_matrix, args, callbacks=[checkpoint, tensorboard])
