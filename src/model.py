@@ -9,12 +9,13 @@ BASE_PATH = '../'
 
 
 class MoleculeCVAE:
-    def __init__(self, loss='binary', gpu_mode=True):
+    def __init__(self, loss='binary', gpu_mode=True, lr=1e-4):
         self.autoencoder = None
         self.encoder = None
         self.decoder = None
         self.gpu_mode = gpu_mode
         self.loss = loss
+        self.lr = lr
 
     def create(self,
                charset,
@@ -33,7 +34,7 @@ class MoleculeCVAE:
         _, z = self._buildEncoder(inputs, latent_rep_size, max_length)
         self.encoder = Model([x, cond], z)
 
-        z_cond = concatenate([z, cond], axis=1)
+        #z_cond = concatenate([z, cond], axis=1)
 
         encoded_input = Input(shape=(latent_rep_size + cond_size,))
         self.decoder = Model(
@@ -63,7 +64,7 @@ class MoleculeCVAE:
             self.encoder.load_weights(weights_file, by_name=True)
             self.decoder.load_weights(weights_file, by_name=True)
 
-        optimizer = optimizers.Adam(clipnorm=1.)
+        optimizer = optimizers.Adam(lr=self.lr)
 
         self.autoencoder.compile(optimizer=optimizer,
                                  loss=vae_loss,

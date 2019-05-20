@@ -72,14 +72,16 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--epochs', default=100, type=int, help='Number of epochs for the model.')
     parser.add_argument('-bs', '--batch-size', default=256, type=int, help='Batch size.')
     parser.add_argument('--gpu', action='store_true', help='Whether to use a GPU-optimized architecture or not.')
+    parser.add_argument('--loss', default='binary', type=str,
+                        help='Loss function to use. Types: [binary (default), categorical]')
+    parser.add_argument('-lr', '--learning-rate', default=1e-4, type=float, help='Learning rate')
+
     parser.add_argument('-mp', '--multi-processing', action='store_true',
                         help='Whether to use multiple threads to process all data or not.')
     parser.add_argument('--use-generators', action='store_true',
                         help='Whether to use generators while training or not.')
     parser.add_argument('-v', '--verbose', default=2, type=int, help='Verbose for the training part.')
     parser.add_argument('-n', '--name', default='model', type=str, help='Name of the model.')
-    parser.add_argument('--loss', default='binary', type=str,
-                        help='Loss function to use. Types: [binary (default), categorical]')
 
     args = parser.parse_args()
 
@@ -89,7 +91,7 @@ if __name__ == '__main__':
 
     trained_model = os.path.join(BASE_PATH, 'models/model_400k_.995.hdf5')
 
-    model = MoleculeCVAE(loss=args.loss, gpu_mode=args.gpu)
+    model = MoleculeCVAE(loss=args.loss, gpu_mode=args.gpu, lr=args.learning_rate)
     model.create(CHARSET, latent_rep_size=LATENT_DIM)
     # model.load(CHARSET, trained_model, latent_rep_size=LATENT_DIM)
     # model.autoencoder.summary()
