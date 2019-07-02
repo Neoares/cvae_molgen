@@ -34,8 +34,6 @@ class MoleculeCVAE:
         _, z = self._buildEncoder(inputs, latent_rep_size, max_length)
         self.encoder = Model([x, cond], z)
 
-        #z_cond = concatenate([z, cond], axis=1)
-
         encoded_input = Input(shape=(latent_rep_size + cond_size,))
         self.decoder = Model(
             encoded_input,
@@ -47,7 +45,6 @@ class MoleculeCVAE:
             )
         )
 
-        # x1 = Input(shape=(max_length, charset_length))
         vae_loss, z1 = self._buildEncoder(inputs, latent_rep_size, max_length)
         self.autoencoder = Model(
             [x, cond],
@@ -112,9 +109,9 @@ class MoleculeCVAE:
             h = CuDNNGRU(501, return_sequences=True, name='gru_2')(h)
             h = CuDNNGRU(501, return_sequences=True, name='gru_3')(h)
         else:
-            h = GRU(501, return_sequences=True, name='gru_1')(h)
-            h = GRU(501, return_sequences=True, name='gru_2')(h)
-            h = GRU(501, return_sequences=True, name='gru_3')(h)
+            h = GRU(501, return_sequences=True, name='gru_1', reset_after=True, recurrent_activation='sigmoid')(h)
+            h = GRU(501, return_sequences=True, name='gru_2', reset_after=True, recurrent_activation='sigmoid')(h)
+            h = GRU(501, return_sequences=True, name='gru_3', reset_after=True, recurrent_activation='sigmoid')(h)
         return TimeDistributed(Dense(charset_length, activation='softmax'), name='decoded_mean')(h)
 
     def save(self, filename):
