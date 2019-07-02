@@ -30,6 +30,27 @@ def load(s2_keys_path, s2_matrix_path, key2inchi_path, sep=',', calc_smiles=Fals
     return s2_matrix[:limit], smiles[:limit].tolist()
 
 
+def get_unique_mols(mol_list, ret_indices=False):
+    inchi_keys = []
+    indices = []
+    for idx, m in enumerate(mol_list):
+        if m is None:
+            inchi_keys.append(m)
+        else:
+            try:
+                inchi = Chem.InchiToInchiKey(Chem.MolToInchi(m))
+                if inchi not in inchi_keys:
+                    indices.append(idx)
+                inchi_keys.append(inchi)
+            except Exception as e:
+                print("Exception in get_unique_mols: {}".format(e))
+                inchi_keys.append(None)
+    unique_mols = [[mol_list[i], inchi_keys[i]] for i in indices]
+    if ret_indices:
+        return np.array(indices, dtype='int32')
+    return unique_mols
+
+
 def preprocess(smiles_list):
     print("Loading", len(smiles_list), "smiles.")
     cropped = [s.ljust(120) for s in smiles_list]
