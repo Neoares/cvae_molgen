@@ -1,5 +1,8 @@
 import h5py
 import numpy as np
+import os
+from tqdm import tqdm
+
 from .constants import CHARSET
 
 
@@ -64,6 +67,72 @@ def decode_latent_molecules(latents, signatures, model, batch_size=256):
         )]
     )
 
-    smiles = np.array([decode_smiles_from_indexes(d, CHARSET) for d in decoded_mols])
+    smiles = np.array([decode_smiles_from_indexes(d) for d in decoded_mols])
     return smiles
 
+
+'''
+Reconstructs molecules using the model.
+
+@param smiles_list list of smiles to reconstruct
+@param n number of reconstructions for each molecule
+@param m number of molecules to reconstruct from the array passed
+@param stds list of standard deviations to perform the simulation
+'''
+
+
+def sim_reconstruction(model, smiles_list, signatures, latent_dim=292, su=None, n=100, m=0, stds=[0.05],
+                       fix='signatures'):
+    if m > 0:
+        smiles_list = smiles_list[:m]
+    if fix == 'smiles' and not su:
+        print("In fix=smiles mode, you may provide a SignatureUtils instance")
+        return 0
+
+    if fix in ['smiles', 'smile']:
+        stds = ['different', 'neutral', 'similar']
+
+    reconstructed_smiles = {std: [] for std in stds}
+
+    if fix in ['signatures', 'signature']:
+        for i, std in enumerate(stds):
+            # print("std:", std)
+            for j, smiles in tqdm(enumerate(smiles_list)):  # enumerate(smiles_list)
+                signature = signatures[j]
+
+                replicated_smiles = np.array([smiles] * n)
+                replicated_signature = np.array([signature] * n)
+                latents = encode_smiles(replicated_smiles, replicated_signature, model)
+
+                noised_latents = std * np.random.normal(size=(n, latent_dim)) + latents
+                recons = decode_latent_molecules(noised_latents, replicated_signature, model)
+
+                reconstructed_smiles[std].append(recons)
+
+    elif fix in ['smiles', 'smile']:
+        chosen_signatures_indices = {std: np.zeros(shape=(m, n), dtype='uint32') for std in stds}
+        for idx, smiles in tqdm(enumerate(smiles_list)):
+            signature = signatures[idx]
+
+            replicated_smiles = np.array([smiles] * n)
+            replicated_signature = np.array([signature] * n)
+            latents = encode_smiles(replicated_smiles, replicated_signature, model)
+
+            # Let's try with 0.05 std for all the molecules
+            std = 0.05
+            noised_latents = std * np.random.normal(size=(n, latent_dim)) + latents
+
+            args = su.get_argsorted(signature)
+            chosen_signatures_indices['different'][idx] = args[:n]
+            chosen_signatures_indices['neutral'][idx] = args[len(args) // 2 - n // 2: len(args) // 2 - n // 2 + n]
+            chosen_signatures_indices['similar'][idx] = args[-n:]
+            chosen_signatures = {'different': su.all_signatures[args[:n]],
+                                 'neutral': su.all_signatures[
+                                     args[len(args) // 2 - n // 2: len(args) // 2 - n // 2 + n]],
+                                 'similar': su.all_signatures[args[-n:]]}
+
+            for name, signs in chosen_signatures.items():
+                recons = decode_latent_molecules(noised_latents, signs, model)
+                reconstructed_smiles[name].append(recons)
+
+    return reconstructed_smiles

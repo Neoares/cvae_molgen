@@ -1,10 +1,24 @@
 import numpy as np
 import pandas as pd
+from scipy.spatial.distance import cdist
 import time
 from rdkit import Chem
 
 from .model_utils import one_hot_index, one_hot_array
 from .constants import CHARSET
+
+
+class SignatureUtils:
+    def __init__(self, all_signatures):
+        self.all_signatures = all_signatures
+
+    @staticmethod
+    def cos_sim(a, b):
+        return -(cdist(a, b, 'cosine') - 1)
+
+    def get_argsorted(self, target_signature):
+        dists = self.cos_sim([target_signature], self.all_signatures).ravel()
+        return np.argsort(dists)
 
 
 def load(s2_keys_path, s2_matrix_path, key2inchi_path, sep=',', calc_smiles=False, save=True, limit=None):
@@ -54,13 +68,13 @@ def get_unique_mols(mol_list, ret_indices=False):
 def preprocess(smiles_list):
     print("Loading", len(smiles_list), "smiles.")
     cropped = [s.ljust(120) for s in smiles_list]
-    preprocessed = np.array([list(map(lambda x: one_hot_array(x, len(CHARSET)), one_hot_index(c, CHARSET))) for c in cropped], dtype='int8')
+    preprocessed = np.array([list(map(lambda x: one_hot_array(x, len(CHARSET)), one_hot_index(c))) for c in cropped], dtype='int8')
     return preprocessed
 
 
 def preprocess_multiprocess(smiles):
     cropped = smiles.ljust(120)
-    preprocessed = list(map(lambda x: one_hot_array(x, len(CHARSET)), one_hot_index(cropped, CHARSET)))
+    preprocessed = list(map(lambda x: one_hot_array(x, len(CHARSET)), one_hot_index(cropped)))
     return preprocessed
 
 
