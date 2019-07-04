@@ -10,7 +10,7 @@ from src.utils import preprocess, preprocess_multiprocess, preprocess_generator,
 
 from argparse import ArgumentParser
 
-from src.constants import CHARSET
+from src.constants import CHARSET, LATENT_DIM
 
 BASE_PATH = os.path.dirname(os.path.join(os.getcwd(), __file__))
 
@@ -84,10 +84,6 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--name', default='model', type=str, help='Name of the model.')
 
     args = parser.parse_args()
-
-    # number of dimensions to represent the molecules
-    # as the model was trained with this number, any operation made with the model must share the dimensions.
-    LATENT_DIM = 292
 
     trained_model = os.path.join(BASE_PATH, 'models/model_400k_.995.hdf5')
 

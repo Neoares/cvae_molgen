@@ -94,5 +94,5 @@ def preprocess_generator(smiles_list, conditions, batch_size=64, shuffle=True):
             cropped = [s.ljust(120) for s in smiles_batch]
 
             preprocessed = np.array(
-                [list(map(lambda x: one_hot_array(x, len(CHARSET)), one_hot_index(c, CHARSET))) for c in cropped])
+                [list(map(lambda x: one_hot_array(x, len(CHARSET)), one_hot_index(c))) for c in cropped])
             yield ([preprocessed, conditions_batch], preprocessed)

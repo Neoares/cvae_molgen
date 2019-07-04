@@ -31,7 +31,7 @@ class MoleculeCVAE:
         cond_trans = Permute((2, 1))(cond_rep)
         inputs = concatenate([x, cond_trans], axis=-2)
 
-        _, z = self._buildEncoder(inputs, latent_rep_size, max_length)
+        vae_loss, z = self._buildEncoder(inputs, latent_rep_size, max_length)
         self.encoder = Model([x, cond], z)
 
         encoded_input = Input(shape=(latent_rep_size + cond_size,))
@@ -45,11 +45,11 @@ class MoleculeCVAE:
             )
         )
 
-        vae_loss, z1 = self._buildEncoder(inputs, latent_rep_size, max_length)
+        # vae_loss, z1 = self._buildEncoder(inputs, latent_rep_size, max_length)
         self.autoencoder = Model(
             [x, cond],
             self._buildDecoder(
-                concatenate([z1, cond]),
+                concatenate([z, cond]),
                 latent_rep_size,
                 max_length,
                 charset_length

@@ -110,7 +110,6 @@ def sim_reconstruction(model, smiles_list, signatures, latent_dim=292, su=None, 
                 reconstructed_smiles[std].append(recons)
 
     elif fix in ['smiles', 'smile']:
-        chosen_signatures_indices = {std: np.zeros(shape=(m, n), dtype='uint32') for std in stds}
         for idx, smiles in tqdm(enumerate(smiles_list)):
             signature = signatures[idx]
 
@@ -123,9 +122,6 @@ def sim_reconstruction(model, smiles_list, signatures, latent_dim=292, su=None, 
             noised_latents = std * np.random.normal(size=(n, latent_dim)) + latents
 
             args = su.get_argsorted(signature)
-            chosen_signatures_indices['different'][idx] = args[:n]
-            chosen_signatures_indices['neutral'][idx] = args[len(args) // 2 - n // 2: len(args) // 2 - n // 2 + n]
-            chosen_signatures_indices['similar'][idx] = args[-n:]
             chosen_signatures = {'different': su.all_signatures[args[:n]],
                                  'neutral': su.all_signatures[
                                      args[len(args) // 2 - n // 2: len(args) // 2 - n // 2 + n]],
