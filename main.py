@@ -92,7 +92,7 @@ if __name__ == '__main__':
     # model.load(CHARSET, trained_model, latent_rep_size=LATENT_DIM)
     # model.autoencoder.summary()
 
-    s2_matrix, smiles = load(
+    signatures, smiles = load(
         os.path.join(BASE_PATH, 'data/s2_keys_400k.npy'),
         os.path.join(BASE_PATH, 'data/s2_matrix_400k.npy'),
         os.path.join(BASE_PATH, 'data/key2inch_400k.csv'),
@@ -106,6 +106,6 @@ if __name__ == '__main__':
         log_dir=os.path.join(BASE_PATH, "logs/{}_{}".format(round(time.time()), args.name)))
 
     if args.use_generators:
-        train_generator(smiles, s2_matrix, args, callbacks=[checkpoint, tensorboard])
+        train_generator(smiles, signatures, args, callbacks=[checkpoint, tensorboard])
     else:
-        train(smiles, s2_matrix, args, callbacks=[checkpoint, tensorboard])
+        train(smiles, signatures, args, callbacks=[checkpoint, tensorboard])
