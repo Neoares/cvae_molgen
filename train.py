@@ -89,8 +89,6 @@ if __name__ == '__main__':
 
     model = MoleculeCVAE(loss=args.loss, gpu_mode=args.gpu, lr=args.learning_rate)
     model.create(CHARSET, latent_rep_size=LATENT_DIM)
-    # model.load(CHARSET, trained_model, latent_rep_size=LATENT_DIM)
-    # model.autoencoder.summary()
 
     signatures, smiles = load(
         os.path.join(BASE_PATH, 'data/s2_keys_400k.npy'),
