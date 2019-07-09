@@ -85,11 +85,11 @@ def sim_reconstruction(model, smiles_list, signatures, latent_dim=292, su=None, 
                        fix='signatures'):
     if m > 0:
         smiles_list = smiles_list[:m]
-    if fix == 'smiles' and not su:
-        print("In fix=smiles mode, you may provide a SignatureUtils instance")
+    if fix == 'latent' and not su:
+        print("In fix=latent mode, you may provide a SignatureUtils instance")
         return 0
 
-    if fix in ['smiles', 'smile']:
+    if fix in ['latent']:
         stds = ['different', 'neutral', 'similar']
 
     reconstructed_smiles = {std: [] for std in stds}
@@ -109,7 +109,7 @@ def sim_reconstruction(model, smiles_list, signatures, latent_dim=292, su=None, 
 
                 reconstructed_smiles[std].append(recons)
 
-    elif fix in ['smiles', 'smile']:
+    elif fix in ['latent']:
         for idx, smiles in tqdm(enumerate(smiles_list)):
             signature = signatures[idx]
 

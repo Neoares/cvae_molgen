@@ -14,12 +14,14 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--num_molecules', default=0, type=int, help='Number of molecules to reconstruct.')
     parser.add_argument('-r', '--num_reconstructions', default=100, type=int,
                         help='Number of reconstructions per molecule.')
-    parser.add_argument('-fix', '--fix', default='signature', type=str, help='Wether to fix the SMILES or the signature')
+    parser.add_argument('-fix', '--fix', default='signature', type=str,
+                        help='Whether to fix the SMILES or the signature')
     parser.add_argument('--gpu', action='store_true', help='Whether to use a GPU-optimized architecture or not.')
+    parser.add_argument('-n', '--name', default='model_400k_.995', type=str, help='Name of the model.')
 
     args = parser.parse_args()
 
-    trained_model = os.path.join(BASE_PATH, 'models/model_400k_.995.hdf5')
+    trained_model = os.path.join(BASE_PATH, 'models/{}.hdf5'.format(args.name))
 
     model = MoleculeCVAE(gpu_mode=args.gpu)
     model.create(CHARSET, latent_rep_size=LATENT_DIM)
