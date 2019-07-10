@@ -91,9 +91,9 @@ if __name__ == '__main__':
     model.create(CHARSET, latent_rep_size=LATENT_DIM)
 
     signatures, smiles = load(
-        os.path.join(BASE_PATH, 'data/s2_keys_400k.npy'),
-        os.path.join(BASE_PATH, 'data/s2_matrix_400k.npy'),
-        os.path.join(BASE_PATH, 'data/key2inch_400k.csv'),
+        os.path.join(BASE_PATH, 'data/inchikeys_B4.npy'),
+        os.path.join(BASE_PATH, 'data/signature_B4_matrix.npy'),
+        os.path.join(BASE_PATH, 'data/key2inch_B4.csv'),
         calc_smiles=False,
         limit=args.size)
 

@@ -27,9 +27,9 @@ if __name__ == '__main__':
     model.load(CHARSET, trained_model, latent_rep_size=LATENT_DIM)
 
     s2_matrix, smiles = load(
-        os.path.join(BASE_PATH, 'data/s2_keys_400k.npy'),
-        os.path.join(BASE_PATH, 'data/s2_matrix_400k.npy'),
-        os.path.join(BASE_PATH, 'data/key2inch_400k.csv'),
+        os.path.join(BASE_PATH, 'data/inchikeys_B4.npy'),
+        os.path.join(BASE_PATH, 'data/signature_B4_matrix.npy'),
+        os.path.join(BASE_PATH, 'data/key2inch_B4.csv'),
         calc_smiles=False)
 
     m = args.num_molecules
@@ -46,5 +46,3 @@ if __name__ == '__main__':
         stds=[0, 0.05, 0.1],
         fix=args.fix
     )
-
-    original_smiles = smiles[-m:]
