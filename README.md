@@ -60,9 +60,29 @@ Cosine similarity between signatures of predicted molecules and input signatures
 
 Cosine similarity between signatures of predicted molecules and the signatures sampled for the decoding.
 
+## Data downloading & preparation
+
+To train or predict with the same data as we used for the experiments, download [this](https://drive.google.com/open?id=1HCQB1H9WbMafI0HLJHfkd9G1iBs2ueQ4) file and unzip it in the `data` folder.
+It contains the inchykeys and the signatures from the Chemical Checker, and a `.csv` file that maps the inchikeys to inchi, in a way that makes possible to convert the inchis to SMILES.
+
+You can also download data for different signature types in the [Chemical Checker's download page](https://chemicalchecker.com/downloads). They provide the signature and their respective inchikeys that need to be converted to SMILES.
+
+Once you have the data, you just need to prepare the environment. For that, you have to install the following packages:
+  - `numpy`
+  - `tensorflow`
+  - `keras`
+  - `tqdm`
+  - `rdkit`
+
+Since `rdkit` is only obtainable through Anaconda, I recommend to create a conda environment, activate it and run the following command:
+
+`conda install -c conda-forge numpy tensorflow keras tqdm rdkit`
+
+You can also download a pre-trained model [here](https://drive.google.com/open?id=1RVzFca5UBy8B7N2OKZXcdVfFYImG0E67) and place it inside the `models` folder.
+
 ## Usage
 
-There are two main files in the repository: `train.py` and `predict.py`. With the first one we can train the model, and with the second we can use an already trained model to generate new molecules.
+There are two main files in the repository: `train.py` and `predict.py`. With the first one we can train the model, and with the second we can use an already trained model to generate new molecules. I strongly recommend to use the `-i` python's flag in order to keep the terminal running after the execution.
 
 ### Training
 
@@ -79,7 +99,7 @@ There are two main files in the repository: `train.py` and `predict.py`. With th
   - `-v` or `--verbose` Default: 2. Verbose level for the training process.
   - `-n` or `--name` Default: `"model"`. Name of the model (used in the saving process).
   
-Example of usage: `python train.py -e 300 -bs 128 --gpu -mp -n model_1`
+Example of usage: `python -i train.py -e 300 -bs 128 --gpu -mp -n model_1`
 
 ### Molecule generation
 
@@ -91,4 +111,4 @@ Example of usage: `python train.py -e 300 -bs 128 --gpu -mp -n model_1`
   - `--gpu`. Flag. Wether to use a GPU-optimized architecture or not.
   - `-n` or `--name`. Default: `"model"`.
   
-  Example of usage: `python predict.py -m 1000 -r 1000 --fix latent --gpu`
+  Example of usage: `python -i predict.py -m 1000 -r 1000 --fix latent --gpu`

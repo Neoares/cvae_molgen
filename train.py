@@ -85,8 +85,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    trained_model = os.path.join(BASE_PATH, 'models/model_400k_.995.hdf5')
-
     model = MoleculeCVAE(loss=args.loss, gpu_mode=args.gpu, lr=args.learning_rate)
     model.create(CHARSET, latent_rep_size=LATENT_DIM)
 
