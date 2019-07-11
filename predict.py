@@ -26,7 +26,7 @@ if __name__ == '__main__':
     model = MoleculeCVAE(gpu_mode=args.gpu)
     model.load(CHARSET, trained_model, latent_rep_size=LATENT_DIM)
 
-    s2_matrix, smiles = load(
+    signatures, smiles = load(
         os.path.join(BASE_PATH, 'data/inchikeys_B4.npy'),
         os.path.join(BASE_PATH, 'data/signature_B4_matrix.npy'),
         os.path.join(BASE_PATH, 'data/key2inch_B4.csv'),
@@ -38,9 +38,9 @@ if __name__ == '__main__':
     reconstructed_smiles = sim_reconstruction(
         model,
         np.array(smiles[-m:]),
-        np.array(s2_matrix[-m:]),
+        np.array(signatures[-m:]),
         latent_dim=LATENT_DIM,
-        su=SignatureUtils(s2_matrix),
+        su=SignatureUtils(signatures),
         m=m,
         n=n,
         stds=[0, 0.05, 0.1],

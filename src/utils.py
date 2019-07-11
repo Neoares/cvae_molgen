@@ -10,7 +10,7 @@ from .constants import CHARSET
 
 class SignatureUtils:
     def __init__(self, all_signatures):
-        self.all_signatures = all_signatures
+        self.all_signatures = np.unique(all_signatures, axis=0)
 
     @staticmethod
     def cos_sim(a, b):
