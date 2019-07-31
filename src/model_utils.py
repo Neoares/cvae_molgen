@@ -57,6 +57,10 @@ def encode_smiles(smiles_list, signatures, model, batch_size=256):
     return latent
 
 
+def decode_smiles_from_indexes(vec):
+    return "".join(map(lambda x: CHARSET[x], vec)).strip()
+
+
 def decode_latent_molecules(latents, signatures, model, batch_size=256):
     if type(latents) == str:
         latents = np.array(latents)
